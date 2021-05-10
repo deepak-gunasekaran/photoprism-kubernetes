@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nvme-app-storage
+spec:
+  capacity:
+    storage: 100Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  nfs:
+    path: /mnt/nvme/k8/pp/app/storage # change to your server nfs location
+    server: 10.219.3.137 # change to your server
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nvme-app-originals
+spec:
+  capacity:
+    storage: 100Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  nfs:
+    path: /mnt/nvme/k8/pp/app/originals # change to your server nfs location
+    server: 10.219.3.137 # change to your server nfs location
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nvme-app-originals-nc
+spec:
+  capacity:
+    storage: 100Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  nfs:
+    path: /mnt/nvme/k8/app/data # change to your server nfs location
+    server: 10.219.3.137 # change to your server nfs location

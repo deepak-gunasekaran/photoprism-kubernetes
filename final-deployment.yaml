@@ -1,0 +1,340 @@
+apiVersion: v1
+data:
+  MYSQL_DATABASE: cGhvdG9wcmlzbQ==
+  MYSQL_PASSWORD: c3VtaW1pbml2aWpheQ==
+  MYSQL_ROOT_PASSWORD: c3VtaW1pbml2aWpheXJvb3Q=
+  MYSQL_USER: cGhvdG9wcmlzbQ==
+  PHOTOPRISM_ADMIN_PASSWORD: c3VtaW1pbml2aWpheQ==
+kind: Secret
+metadata:
+  labels:
+    app: photoprism
+    version: "15"
+  name: photoprism-db-secrets
+  namespace: photoprism
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: photoprism
+    component: app
+    version: "15"
+  name: photoprism-app
+  namespace: photoprism
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: photoprism
+    component: app
+    version: "15"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: photoprism
+    component: db
+    version: "15"
+  name: photoprism-db
+  namespace: photoprism
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: photoprism
+    component: db
+    version: "15"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app: photoprism
+    version: "15"
+  name: photoprism-nvme-app-originals
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 100Gi
+  nfs:
+    path: /mnt/nvme/k8/pp/app/originals
+    server: 10.219.3.137
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app: photoprism
+    version: "15"
+  name: photoprism-nvme-app-storage
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 100Gi
+  nfs:
+    path: /mnt/nvme/k8/pp/app/storage
+    server: 10.219.3.137
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app: photoprism
+    version: "15"
+  name: photoprism-nvme-db
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 100Gi
+  nfs:
+    path: /mnt/nvme/k8/pp/db
+    server: 10.219.3.137
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: photoprism
+    version: "15"
+  name: photoprism-app-originals-pvc
+  namespace: photoprism
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: manual
+  volumeName: photoprism-nvme-app-originals
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: photoprism
+    version: "15"
+  name: photoprism-app-storage-pvc
+  namespace: photoprism
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: manual
+  volumeName: photoprism-nvme-app-storage
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: photoprism
+    version: "15"
+  name: photoprism-db-pvc
+  namespace: photoprism
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: manual
+  volumeName: photoprism-nvme-db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: photoprism
+    component: app
+    version: "15"
+  name: photoprism-app
+  namespace: photoprism
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: photoprism
+      component: app
+      version: "15"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: photoprism
+        component: app
+        version: "15"
+    spec:
+      containers:
+      - env:
+        - name: PHOTOPRISM_DATABASE_SERVER
+          value: photoprism-db:3306
+        - name: PHOTOPRISM_DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              key: MYSQL_DATABASE
+              name: photoprism-db-secrets
+        - name: PHOTOPRISM_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: MYSQL_PASSWORD
+              name: photoprism-db-secrets
+        - name: PHOTOPRISM_DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              key: MYSQL_USER
+              name: photoprism-db-secrets
+        - name: PHOTOPRISM_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: PHOTOPRISM_ADMIN_PASSWORD
+              name: photoprism-db-secrets
+        - name: PHOTOPRISM_ORIGINALS_LIMIT
+          value: "100000"
+        - name: PHOTOPRISM_HTTP_COMPRESSION
+          value: gzip
+        - name: PHOTOPRISM_DEBUG
+          value: "false"
+        - name: PHOTOPRISM_PUBLIC
+          value: "true"
+        - name: PHOTOPRISM_READONLY
+          value: "false"
+        - name: PHOTOPRISM_DISABLE_WEBDAV
+          value: "false"
+        - name: PHOTOPRISM_DISABLE_SETTINGS
+          value: "false"
+        - name: PHOTOPRISM_DISABLE_TENSORFLOW
+          value: "false"
+        - name: PHOTOPRISM_DARKTABLE_PRESETS
+          value: "false"
+        - name: PHOTOPRISM_DETECT_NSFW
+          value: "false"
+        - name: PHOTOPRISM_UPLOAD_NSFW
+          value: "true"
+        - name: PHOTOPRISM_DATABASE_DRIVER
+          value: mysql
+        - name: PHOTOPRISM_SITE_URL
+          value: http://localhost:2342/
+        - name: PHOTOPRISM_SITE_TITLE
+          value: MSVD Storage
+        - name: PHOTOPRISM_SITE_CAPTION
+          value: Browse our Life
+        - name: PHOTOPRISM_SITE_DESCRIPTION
+          value: MSVD Photos
+        - name: PHOTOPRISM_SITE_AUTHOR
+          value: Deepak & Yamini
+        image: photoprism/photoprism:latest
+        imagePullPolicy: Always
+        name: app
+        ports:
+        - containerPort: 2342
+        volumeMounts:
+        - mountPath: /photoprism/storage
+          name: app-persistent-storage-storage
+        - mountPath: /photoprism/originals
+          name: app-persistent-storage-originals
+      restartPolicy: Always
+      volumes:
+      - name: app-persistent-storage-storage
+        persistentVolumeClaim:
+          claimName: photoprism-app-storage-pvc
+      - name: app-persistent-originals
+        persistentVolumeClaim:
+          claimName: photoprism-app-originals-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: photoprism
+    component: db
+    version: "15"
+  name: photoprism-db
+  namespace: photoprism
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: photoprism
+      component: db
+      version: "15"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: photoprism
+        component: db
+        version: "15"
+    spec:
+      containers:
+      - args:
+        - --transaction-isolation=READ-COMMITTED
+        - --binlog-format=ROW
+        - --max-connections=1000
+        env:
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: MYSQL_DATABASE
+              name: photoprism-db-secrets
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: MYSQL_PASSWORD
+              name: photoprism-db-secrets
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: MYSQL_ROOT_PASSWORD
+              name: photoprism-db-secrets
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: MYSQL_USER
+              name: photoprism-db-secrets
+        image: mariadb:latest
+        name: db
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: db-persistent-storage
+      restartPolicy: Always
+      volumes:
+      - name: db-persistent-storage
+        persistentVolumeClaim:
+          claimName: photoprism-db-pvc
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    app: photoprism
+    version: "15"
+  name: photoprism-ingress
+  namespace: photoprism
+spec:
+  rules:
+  - host: pp.msvd.party
+    http:
+      paths:
+      - backend:
+          serviceName: photoprism-app
+          servicePort: 2342

@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: app
+  name: app
+spec:
+  selector:
+    matchLabels:
+      component: app
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        component: app
+    spec:
+      containers:
+        - image: photoprism/photoprism:latest
+          imagePullPolicy: Always
+          name: app
+          ports:
+            - containerPort: 2342
+          env:
+            - name: PHOTOPRISM_DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQL_DATABASE
+                  name: db-secrets
+            - name: PHOTOPRISM_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQL_PASSWORD
+                  name: db-secrets
+            - name: PHOTOPRISM_DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQL_USER
+                  name: db-secrets
+            - name: PHOTOPRISM_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: PHOTOPRISM_ADMIN_PASSWORD
+                  name: db-secrets
+            - name: PHOTOPRISM_ORIGINALS_LIMIT
+              value: "100000"
+            - name: PHOTOPRISM_HTTP_COMPRESSION
+              value: "gzip"
+            - name: PHOTOPRISM_DEBUG
+              value: "false"
+            - name: PHOTOPRISM_PUBLIC
+              value: "false"
+            - name: PHOTOPRISM_READONLY
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_WEBDAV
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_SETTINGS
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_TENSORFLOW
+              value: "false"
+            - name: PHOTOPRISM_DARKTABLE_PRESETS
+              value: "false"
+            - name: PHOTOPRISM_DETECT_NSFW
+              value: "false"
+            - name: PHOTOPRISM_UPLOAD_NSFW
+              value: "true"
+            - name: PHOTOPRISM_DATABASE_DRIVER
+              value: "mysql"
+            - name: PHOTOPRISM_SITE_URL
+              value: "http://localhost:2342/"
+            - name: PHOTOPRISM_SITE_TITLE
+              value: "MSVD Storage"
+            - name: PHOTOPRISM_SITE_CAPTION
+              value: "Browse our Life"
+            - name: PHOTOPRISM_SITE_DESCRIPTION
+              value: "MSVD Photos"
+            - name: PHOTOPRISM_SITE_AUTHOR
+              value: "Deepak & Yamini"
+          volumeMounts:
+            - mountPath: /photoprism/storage
+              name: app-persistent-storage-storage
+            - mountPath: /photoprism/originals
+              name: app-persistent-storage-originals
+            - mountPath: /photoprism/originals/frm_nxt_cloud/
+              name: app-persistent-storage-originals-nc
+      restartPolicy: Always
+      volumes:
+        - name: app-persistent-storage-storage
+          persistentVolumeClaim:
+            claimName: app-storage-pvc
+        - name: app-persistent-storage-originals
+          persistentVolumeClaim:
+            claimName: app-originals-pvc
+        - name: app-persistent-storage-originals-nc
+          persistentVolumeClaim:
+            claimName: app-originals-pvc-nc

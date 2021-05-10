@@ -1,0 +1,6 @@
+resources:
+  - pv-app.yaml
+  - pvc.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml

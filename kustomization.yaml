@@ -1,0 +1,20 @@
+namespace: photoprism
+namePrefix: photoprism-
+
+commonLabels:
+  app: photoprism
+  version: "15"
+
+bases:
+  - mariadb
+  - photoprism
+
+patchesStrategicMerge:
+  - patch.yaml
+
+vars:
+  - name: DB_SERVICE
+    objref:
+      apiVersion: v1
+      kind: Service
+      name: db

@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: default
+spec:
+  rules:
+    - host: pp.msvd.party
+      http:
+        paths:
+          - backend:
+              serviceName: app
+              servicePort: 2342
