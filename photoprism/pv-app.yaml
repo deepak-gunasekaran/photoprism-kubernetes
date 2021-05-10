@@ -43,5 +43,5 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: manual
   nfs:
-    path: /mnt/nvme/k8/app/data # change to your server nfs location
-    server: 10.219.3.137 # change to your server nfs location
+    path: /mnt/nvme/k8/app/data # change to your server nfs location where the nextcloud app/data directory. (this is for integrating the nextcloud data into the photoprism)
+    server: 10.219.3.137 # change to your server nfs location where nextcloud app data folder
